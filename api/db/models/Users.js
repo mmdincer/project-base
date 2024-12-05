@@ -21,4 +21,4 @@ class Users extends mongoose.Model
 }
 
 schema.loadClass(Users);
-module.exports = mongoose.Model("users", schema);
+module.exports = mongoose.model("users", schema);
