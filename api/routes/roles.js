@@ -58,70 +58,72 @@ router.post("/add", async (req, res) => {
 });
 
 router.post("/update", async (req, res) => {
-    let body = req.body;
     try {
-
-        if (!body._id) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, "Validation Error!", "_id field must be filled");
-
-        let updates = {};
-
-        if (body.role_name) updates.role_name = body.role_name;
-        if (typeof body.is_active === "boolean") updates.is_active = body.is_active;
-
-        if (body.permissions && Array.isArray(body.permissions) && body.permissions.length > 0) {
-
-            let permissions = await RolePrivileges.find({ role_id: body._id });
-
-            // body.permissions => ["category_view", "user_add"]
-            // permissions => [{role_id: "abc", permission: "user_add", _id: "bcd"}];
-
-            let removedPermissions = permissions.filter(x => !body.permissions.includes(x.permission));
-            let newPermissions = body.permissions.filter(x => !permissions.map(p => p.permission).includes(x));
-
-            if (removedPermissions.length > 0) {
-                await RolePrivileges.deleteOne({ _id: { $in: removedPermissions.map(x => x._id) } });
-            }
-
-            if (newPermissions.length > 0) {
-                for (let i = 0; i < newPermissions.length; i++) {
-                    let priv = new RolePrivileges({
-                        role_id: body._id,
-                        permission: newPermissions[i],
-                        created_by: req.user?.id
-                    });
-
-                    await priv.save();
-                }
-            }
+      let body = req.body;
+      let updates = {};
+  
+      if (!body._id) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, "Validation Error!", "_id fields must be filled");
+  
+      if (body.password && body.password.length < Enum.PASS_LENGTH) {
+        updates.password = bcrypt.hashSync(body.password, bcrypt.genSaltSync(8), null);
+      }
+  
+      if (typeof body.is_active === "boolean") updates.is_active = body.is_active;
+      if (body.first_name) updates.first_name = body.first_name;
+      if (body.last_name) updates.last_name = body.last_name;
+      if (body.phone_number) updates.phone_number = body.phone_number;
+  
+      if (Array.isArray(body.roles) && body.roles.length > 0) {
+  
+        let userRoles = await UserRoles.find({ user_id: body._id });
+  
+        let removedRoles = userRoles.filter(x => !body.roles.includes(x.role_id));
+        let newRoles = body.roles.filter(x => !userRoles.map(r => r.role_id).includes(x));
+  
+        if (removedRoles.length > 0) {
+          await UserRoles.deleteMany({ _id: { $in: removedRoles.map(x => x._id.toString()) } });
         }
-
-
-
-        await Roles.updateOne({ _id: body._id }, updates);
-
-        res.json(Response.successResponse({ success: true }));
-
+  
+        if (newRoles.length > 0) {
+          for (let i = 0; i < newRoles.length; i++) {
+            let userRole = new UserRoles({
+              role_id: newRoles[i],
+              user_id: body._id
+            });
+  
+            await userRole.save();
+          }
+        }
+  
+      }
+  
+      await Users.updateOne({ _id: body._id }, updates);
+  
+      res.json(Response.successResponse({ success: true }));
+  
     } catch (err) {
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(errorResponse);
+      let errorResponse = Response.errorResponse(err);
+      res.status(errorResponse.code).json(errorResponse);
     }
-});
-
-router.post("/delete", async (req, res) => {
-    let body = req.body;
+  });
+  
+  router.post("/delete", async (req, res) => {
     try {
-
-        if (!body._id) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, "Validation Error!", "_id field must be filled");
-
-        await Roles.deleteMany({ _id: body._id });
-
-        res.json(Response.successResponse({ success: true }));
-
+      let body = req.body;
+  
+      if (!body._id) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, "Validation Error!", "_id fields must be filled");
+  
+      await Users.deleteOne({ _id: body._id });
+  
+      await UserRoles.deleteMany({ user_id: body._id });
+  
+      res.json(Response.successResponse({ success: true }));
+  
     } catch (err) {
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(errorResponse);
+      let errorResponse = Response.errorResponse(err);
+      res.status(errorResponse.code).json(errorResponse);
     }
-});
+  });
 
 router.get("/role_privileges", async (req, res) => {
     res.json(role_privileges);
