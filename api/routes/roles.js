@@ -1,13 +1,17 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require('bcrypt-nodejs');
 const Response = require("../lib/Response");
 const CustomError = require("../lib/Error");
 const Enum = require("../config/Enum");
 const role_privileges = require("../config/role_privileges");
-
+const Users = require("../db/models/Users");
 const Roles = require("../db/models/Roles");
 const RolePrivileges = require("../db/models/RolePrivileges");
+const UserRoles = require("../db/models/UserRoles");
+/* eslint-disable no-unused-vars */
 const { route } = require("./categories");
+/* eslint-enable no-unused-vars */
 
 router.get("/", async (req, res) => {
     try {

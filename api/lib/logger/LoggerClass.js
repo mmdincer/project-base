@@ -1,4 +1,3 @@
-const { info } = require("winston");
 const logger = require("./logger");
 
 let instance = null;
