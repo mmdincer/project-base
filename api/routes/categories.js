@@ -8,7 +8,9 @@ const AuditLogs = require("../lib/AuditLogs");
 const logger = require("../lib/logger/LoggerClass");
 
 /* GET categories listing. */
+/* eslint-disable no-unused-vars */
 router.get('/', async (req, res, next) => {
+/* eslint-enable no-unused-vars */
 
   try {
     let categories = await Categories.find({});
