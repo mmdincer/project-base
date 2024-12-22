@@ -9,9 +9,15 @@ const Users = require("../db/models/Users");
 const Roles = require("../db/models/Roles");
 const RolePrivileges = require("../db/models/RolePrivileges");
 const UserRoles = require("../db/models/UserRoles");
-/* eslint-disable no-unused-vars */
+// eslint-disable-next-line 
 const { route } = require("./categories");
-/* eslint-enable no-unused-vars */
+
+
+const auth = require("../lib/auth")();
+
+router.all("*", auth.authenticate(), (req, res, next) => {
+    next();
+});
 
 router.get("/", async (req, res) => {
     try {
