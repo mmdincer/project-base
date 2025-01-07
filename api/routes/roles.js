@@ -19,7 +19,7 @@ router.all("*", auth.authenticate(), (req, res, next) => {
     next();
 });
 
-router.get("/", async (req, res) => {
+router.get("/", /*auth.checkRoles("role_view") , */async (req, res) => {
     try {
         let roles = await Roles.find({});
 
@@ -31,7 +31,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.post("/add", async (req, res) => {
+router.post("/add", auth.checkRoles("role_add") , async (req, res) => {
     let body = req.body;
     try {
 
@@ -67,7 +67,7 @@ router.post("/add", async (req, res) => {
     }
 });
 
-router.post("/update", async (req, res) => {
+router.post("/update", /* auth.checkRoles("role_update") ,*/ async (req, res) => {
     try {
       let body = req.body;
       let updates = {};
@@ -115,9 +115,9 @@ router.post("/update", async (req, res) => {
       let errorResponse = Response.errorResponse(err);
       res.status(errorResponse.code).json(errorResponse);
     }
-  });
+});
   
-  router.post("/delete", async (req, res) => {
+router.post("/delete", auth.checkRoles("role_delete") , async (req, res) => {
     try {
       let body = req.body;
   
@@ -133,7 +133,7 @@ router.post("/update", async (req, res) => {
       let errorResponse = Response.errorResponse(err);
       res.status(errorResponse.code).json(errorResponse);
     }
-  });
+});
 
 router.get("/role_privileges", async (req, res) => {
     res.json(role_privileges);
