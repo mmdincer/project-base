@@ -70,9 +70,9 @@ router.post("/auth", async (req, res) => {
 
     let user = await Users.findOne({email});
 
-    if (!user) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("USER.AUTH_ERROR", req.user?.language));
+    if (!user) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.AUTH_ERROR", req.user?.language));
 
-    if(user.validPassword(password)) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("USER.AUTH_ERROR", req.user?.language));
+    if(user.validPassword(password)) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.AUTH_ERROR", req.user?.language));
 
     let payload = {
       id: user._id,
@@ -113,7 +113,7 @@ router.get('/', auth.checkRoles("user_view") , async(req, res) => {
   }
 });
 
-router.post('/add' , auth.checkRoles("user_add") ,  async (req, res) => {
+router.post('/add' , /*auth.checkRoles("user_add") ,*/  async (req, res) => {
   let body = req.body;
   try {
 

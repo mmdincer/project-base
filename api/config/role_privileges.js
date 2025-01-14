@@ -86,6 +86,12 @@ module.exports = {
             description: "category Update"
         },
         {
+            key: "category_export",
+            name: "category export",
+            group: "CATEGORIES",
+            description: "category export"
+        },
+        {
             key: "category_delete",
             name: "category Delete",
             group: "CATEGORIES",
