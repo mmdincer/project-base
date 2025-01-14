@@ -9,10 +9,10 @@ const Users = require("../db/models/Users");
 const Roles = require("../db/models/Roles");
 const RolePrivileges = require("../db/models/RolePrivileges");
 const UserRoles = require("../db/models/UserRoles");
+const config = require("../config");
 const i18n = new (require("../lib/i18n"))(config.DEFAULT_LANG);
 // eslint-disable-next-line 
 const { route } = require("./categories");
-const config = require("../config");
 
 
 const auth = require("../lib/auth")();
