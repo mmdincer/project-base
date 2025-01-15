@@ -6,6 +6,7 @@ module.exports = {
         "FIELD_MUST_BE_FILLED": "{} field must be filled",
         "FIELD_MUST_BE_TYPE" : "{} field must be {}",
         "FIELD_MUST_BE_GREATER_THAN": "{} field's length must be greater than ",
-        "AUTH_ERROR": "email and password wrong"
+        "AUTH_ERROR": "email and password wrong",
+        "NEED_PERMISSIONS": "need permissions"
     }
 }

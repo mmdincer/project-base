@@ -12,6 +12,19 @@ const config = require("../config");
 var router = express.Router();
 const auth = require("../lib/auth")();
 const i18n = new (require("../lib/i18n"))(config.DEFAULT_LANG);
+const { rateLimit } = require('express-rate-limit');
+const RateLimitMongo = require("rate-limit-mongo");
+
+const limiter = rateLimit({
+  store: new RateLimitMongo({
+    uri: config.CONNECTION_STRING,
+    collectionName: "rateLimits",
+    expireTimeMs: 15 * 60 * 1000
+  }),
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+});
 
 router.post('/register' , async (req, res) => {
   let body = req.body;
@@ -61,7 +74,7 @@ router.post('/register' , async (req, res) => {
 });
 
 
-router.post("/auth", async (req, res) => {
+router.post("/auth", limiter, async (req, res) => {
   try {
     
     let {email, password} = req.body;
@@ -69,9 +82,12 @@ router.post("/auth", async (req, res) => {
 
     let user = await Users.findOne({email});
 
-    if (!user) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.AUTH_ERROR", req.user?.language));
+    if (!user) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", config.DEFAULT_LANG), i18n.translate("COMMON.AUTH_ERROR", config.DEFAULT_LANG));
 
-    if(user.validPassword(password)) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.AUTH_ERROR", req.user?.language));
+    if(user.validPassword(password)) throw new CustomError(Enum.HTTP_CODES.UNAUTHORIZED, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", config.DEFAULT_LANG), i18n.translate("COMMON.AUTH_ERROR", config.DEFAULT_LANG));
+
+
+
 
     let payload = {
       id: user._id,
@@ -171,6 +187,11 @@ router.post('/update', auth.checkRoles("user_update") ,  async (req, res) => {
     if(body.first_name) updates.first_name = body.first_name;
     if(typeof body.is_active === "boolean") updates.is_active = body.is_active;    if(body.last_name) updates.last_name = body.last_name;
     if(body.phone_number) updates.phone_number = body.phone_number;
+
+    if(body._id == req.user.id) {
+      body.roles = null;
+      
+    }
 
     if(Array.isArray(body.roles) || body.roles.length > 0) 
     {
