@@ -75,7 +75,7 @@ router.post("/auth", async (req, res) => {
 
     let payload = {
       id: user._id,
-      exp: parseInt(Date.now() / 1000) * config.JWT.EXPIRE_TIME
+      exp: parseInt(Date.now() / 1000) + config.JWT.EXPIRE_TIME
     }
 
     let token = jwt.encode(payload, config.JWT.SECRET);
