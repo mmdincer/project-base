@@ -1,8 +1,7 @@
 var express = require('express');
 const bcrypt = require('bcrypt-nodejs');
-const is = require('is_js');
 const jwt = require("jwt-simple");
-
+const validator = require('validator');
 const Users = require('../db/models/Users');
 const UserRoles = require('../db/models/UserRoles');
 const Roles = require('../db/models/Roles');
@@ -24,7 +23,7 @@ router.post('/register' , async (req, res) => {
     }
 
     if(!body.email) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user?.language, ["email"]));
-    if(is.not.email(body.email)) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_TYPE", req.user?.language, ["email", "mail format"]));
+    if(!validator.isEmail(body.email)) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_TYPE", req.user?.language, ["email", "mail format"]));
     if(!body.password) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user?.language, ["password"]));
     if (body.password.length < Enum.PASS_LENGTH) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_GREATER_THAN", req.user?.language, ["password"]) + Enum.PASS_LENGTH);
 
@@ -103,7 +102,13 @@ router.all("*", auth.authenticate(), (req, res, next) => {
 /* GET users listing. */
 router.get('/', auth.checkRoles("user_view") , async(req, res) => {
   try {
-    let users = await Users.find({});
+    let users = await Users.find({}, {password: 0}).lean();
+
+    
+    for (let i = 0; i < users.length; i++) {
+        let roles = await UserRoles.find({user_id: users[i]._id}).populate("role_id");
+        users[i].roles = roles;
+    }
 
     res.json(Response.successResponse(users));
 
@@ -118,7 +123,7 @@ router.post('/add' , /*auth.checkRoles("user_add") ,*/  async (req, res) => {
   try {
 
     if(!body.email) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user?.language, ["email"]));
-    if(is.not.email(body.email)) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_TYPE", req.user?.language, ["email", "mail"]));
+    if(validator.isEmail(body.email)) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_TYPE", req.user?.language, ["email", "mail"]));
     if(!body.password) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user?.language, ["password"]));
     if (body.password.length < Enum.PASS_LENGTH) throw new CustomError(Enum.HTTP_CODES.BAD_REQUEST, i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user?.language), i18n.translate("COMMON.FIELD_MUST_BE_GREATER_THAN", req.user?.language, ["password"]) + Enum.PASS_LENGTH);
 
